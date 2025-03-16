@@ -1,0 +1,96 @@
+#!/usr/bin/env groovy
+
+import hudson.model.*
+import groovy.transform.Field
+
+def org_name = 'Enter org name'   //Org details//
+def repo_name = 'Enter Repo name'      // Repo details//
+def branch_n = "Enter Branch name"
+def repo_url = "https://github.com/${org_name}/${repo_name}.git" 
+// def git_creds = ''       // Git credintials //
+def branch_name = branch_n  // GitHub Branch Name
+def PROJECT_NAME = repo_name
+def org_project = "${org_name}/${repo_name}"  // provide the orgname and reponame
+def ref_branch = "refs/heads/${branch_n}"   // change the Branch name
+def EMAIL_ID = "Enter Email to get email notifications"
+
+pipeline {
+     agent {label 'Linux'}
+      tools {
+        maven 'maven'
+      //  jdk 'jdk17'
+    }
+triggers {
+  cron 'H H 1,15 * *'
+}
+       stages {
+	  stage('Checkout Git Branch') {
+
+           steps{
+		   // Checkout Code repository under workspace //
+
+          cleanWs()   
+		   script {  
+                        properties([pipelineTriggers([pollSCM('* * * * *')])])
+			   checkout scm
+			  }
+            }
+        }
+        stage('CodeQL install') {
+        when {
+                expression {env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'Dev' }
+            }
+            steps {
+                    script {
+             sh 'wget https://github.com/github/codeql-action/releases/latest/download/codeql-bundle-linux64.tar.gz'
+             sh 'tar -xvzf ./codeql-bundle-linux64.tar.gz'
+        }
+            }
+        }
+        stage('CodeQL init and Build') {
+            steps {
+        script {
+                sh './codeql/codeql database create java-database --language=java --command=\'ant -f ./ant/build.xml\''
+             }
+             }
+            }
+         stage('CodeQL Analyze') {
+            steps {
+        script {
+               sh 'touch $WORKSPACE/java.sarif'
+                sh './codeql/codeql database analyze java-database java-security-and-quality.qls --format=sarif-latest --output=$WORKSPACE/java.sarif'
+             }
+             }
+            }
+           stage('CodeQL Commit Report') {
+            steps {
+        script {
+                withCredentials([string(credentialsId: 'GitHub_Migration', variable: 'VARIABLE')]) {
+                GIT_COMMIT = sh (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
+        sh "echo $VARIABLE | ./codeql/codeql github upload-results --repository=$org_project --ref=$ref_branch --commit=$GIT_COMMIT  --sarif=java.sarif --github-auth-stdin"           
+        }
+             }
+            } 
+           }
+  }
+   post {
+    success {
+      echo 'CodeQL scan is completed.'
+      emailext (
+        subject: "$PROJECT_NAME DevSecOps CodeQL Scan Completed",
+        mimeType: "text/html",
+        body: "Please login to $repo_url to access the scan results",
+        to: EMAIL_ID
+      )
+    }
+    failure {
+      echo "There was an error in CodeQL Scan"
+      emailext (
+        subject: "$PROJECT_NAME DevSecOps CodeQL Scan Failed",
+        mimeType: "text/html",
+        body: "Please check the console for more details: ${env.BUILD_URL}console",
+        to: EMAIL_ID
+      )
+    }
+  }
+}
