@@ -1,0 +1,88 @@
+#!/usr/bin/env groovy
+
+import hudson.model.*
+import groovy.transform.Field
+
+def org_name = 'Enter org name'   // Org details //
+def repo_name = 'Enter Repo name' // Repo details //
+def branch_n = "Enter Branch name"
+def repo_url = "https://github.com/${org_name}/${repo_name}.git"
+// def git_creds = ''       // Git credentials //
+def branch_name = branch_n  // GitHub Branch Name
+def PROJECT_NAME = repo_name
+def org_project = "${org_name}/${repo_name}"  // provide the orgname and reponame
+def ref_branch = "refs/heads/${branch_n}"   // change the Branch name
+def EMAIL_ID = "Enter Email to get email notifications"
+
+pipeline {
+    agent { label 'Windows' }
+
+    environment {
+        python = "python"
+    }
+
+    stages {
+        stage('Checkout Git Branch') {
+            steps {
+                // Checkout Code repository under workspace //
+                cleanWs()
+                script {
+                    checkout scm
+                }
+            }
+        }
+
+        stage('CodeQL init and Build') {
+            steps {
+                script {
+                    bat "mkdir %WORKSPACE%\\codeql\\databases"
+                    bat 'echo. > %WORKSPACE%\\codeql\\databases\\python-database.sarif'
+                    bat 'echo. > %WORKSPACE%\\python-database.qls'
+                    bat 'D:\\codeql-bundle-win64\\codeql\\codeql database create  %WORKSPACE%\\codeql\\databases\\python-database -l=python'
+                }
+            }
+        }
+
+        stage('CodeQL Analyze') {
+            steps {
+                script {
+                    bat 'D:\\codeql-bundle-win64\\codeql\\codeql database analyze %WORKSPACE%\\codeql\\databases\\python-database --format=sarif-latest --output=%WORKSPACE%\\codeql\\databases\\python-database.sarif'
+                }
+            }
+        }
+
+        stage('CodeQL Commit Report') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'GitHub_Migration', variable: 'VGIT')]) {
+                        bat 'echo %VGIT%'
+                        // GIT_COMMIT = bat (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
+                        bat "echo %VGIT% | D:\\codeql-bundle-win64\\codeql\\codeql github upload-results  --repository=$org_project --ref=$ref_branch --sarif=%WORKSPACE%\\codeql\\databases\\python-database.sarif --github-auth-stdin --github-url=https://github.com"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'CodeQL scan is completed.'
+            emailext(
+                subject: "$PROJECT_NAME DevSecOps CodeQL Scan Completed",
+                mimeType: "text/html",
+                body: "Please login to test to access the scan results",
+                to: EMAIL_ID
+            )
+        }
+
+        failure {
+            echo "There was an error in CodeQL Scan"
+            emailext(
+                subject: "$PROJECT_NAME DevSecOps CodeQL Scan Failed",
+                mimeType: "text/html",
+                body: "Please check the console for more details: ${env.BUILD_URL}console",
+                to: EMAIL_ID
+            )
+        }
+    }
+}
