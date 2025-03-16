@@ -1,0 +1,23 @@
+# Unified Jenkinsfile for javascript, groovy and Go languages
+**JS_CodeQL** = 
+Javascript, groovy, Go, Typscript
+**C#** = 
+Please ensure that the .cln file is added to the CodeQL init and Build Stage.
+     Ex : stage('CodeQL init and Build') {
+      steps {
+        script {            
+            bat "mkdir %WORKSPACE%\\codeql\\databases"
+            bat 'echo. > %WORKSPACE%\\codeql\\databases\\MyDriverDatabase.sarif'
+            bat 'echo. > %WORKSPACE%\\codeql\\databases\\MyDriverDatabase.qls'
+            bat 'D:\\codeql-bundle-win64\\codeql\\codeql database create %WORKSPACE%\\codeql\\databases\\MyDriverDatabase -l=csharp -s=%WORKSPACE% -c=\"msbuild /t:rebuild %WORKSPACE%\\Elevator.sln\"'
+        }
+      }
+    }
+**java** =
+1. If required setting.xml file should be added to the https://qa-jenkins-coverity.power.ge.com/configfiles/
+2. java version should be match with projectversion
+**Reference Pipelines:** 
+Unified Jenkinsfile : 
+Java :               
+C# :                 
+Python :              
