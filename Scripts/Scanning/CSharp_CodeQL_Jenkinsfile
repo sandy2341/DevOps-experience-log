@@ -1,0 +1,102 @@
+#!/usr/bin/env groovy
+
+import hudson.model.*
+import groovy.transform.Field
+
+def org_name = 'Enter org name'   //Org details//
+def repo_name = 'Enter Repo name'      // Repo details//
+def branch_n = "Enter Branch name"
+def repo_url = "https://github.com/${org_name}/${repo_name}.git" 
+// def git_creds = ''       // Git credintials //
+def branch_name = branch_n  // GitHub Branch Name
+def PROJECT_NAME = repo_name
+def org_project = "${org_name}/${repo_name}"  // provide the orgname and reponame
+def ref_branch = "refs/heads/${branch_n}"   // change the Branch name
+def EMAIL_ID = "Enter Email to get email notifications"
+
+pipeline {
+      options { buildDiscarder(logRotator(numToKeepStr: '10'))
+               disableConcurrentBuilds() 
+      }
+     agent {label 'Windows'}
+     tools {
+  nodejs 'npm'
+}
+triggers {
+    pollSCM('* * * * *') // Check for new commits every minute
+    cron('H 6 */15 * *')   // Run the build every 15 days at 6 am
+}
+    
+   environment {
+   // msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/Msbuild.exe"
+   	msbuild = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\Msbuild.exe"
+    params = "-p:Platform=\"Any CPU\" -p:Configuration=Release"
+   
+  }
+  stages {
+      
+      	  stage('Checkout Git Branch') {
+
+           steps{
+		   // Checkout Code repository under workspace //
+
+        cleanWs() 
+		   script {  
+			   checkout scm
+			  }		
+           }
+        }
+       stage('CodeQL init and Build') {
+      steps {
+        script {
+            
+            bat "mkdir %WORKSPACE%\\codeql\\databases"
+            bat 'echo. > %WORKSPACE%\\codeql\\databases\\MyDriverDatabase.sarif'
+            bat 'echo. > %WORKSPACE%\\codeql\\databases\\MyDriverDatabase.qls'
+            bat 'D:\\codeql-bundle-win64\\codeql\\codeql database create %WORKSPACE%\\codeql\\databases\\MyDriverDatabase -l=csharp -s=%WORKSPACE% -c=\"msbuild /t:rebuild %WORKSPACE%\\Migration_Tool\\Migration_Tool.sln\"'
+        }
+      }
+    }
+    stage('CodeQL Analyze') {
+      steps {
+        script {
+            bat 'D:\\codeql-bundle-win64\\codeql\\codeql database analyze %WORKSPACE%\\codeql\\databases\\MyDriverDatabase --format=sarif-latest --output=%WORKSPACE%\\codeql\\databases\\MyDriverDatabase.sarif'
+          
+        }
+      }
+    }
+    stage('CodeQL Commit Report') {
+            steps {
+        script {
+                withCredentials([string(credentialsId: 'GitHub_Migration', variable: 'VGIT')]) {
+                bat 'echo %VGIT%'
+        bat 'echo %VGIT% | D:\\codeql-bundle-win64\\codeql\\codeql github upload-results --repository=gev-pc/Optimiser_MigrationTool --ref=refs/heads/main --sarif=%WORKSPACE%\\codeql\\databases\\MyDriverDatabase.sarif --github-auth-stdin'          
+        }
+             }
+            } 
+           }
+        }
+         post {
+           always {
+              cleanWs()
+           }
+    success {
+      echo 'CodeQL scan is completed.'
+      emailext (
+        subject: "$PROJECT_NAME DevSecOps CodeQL Scan Completed",
+        mimeType: "text/html",
+        body: "Please login to $repo_url to access the scan results",
+        to: EMAIL_ID
+      )
+    }
+    failure {
+      echo "There was an error in CodeQL Scan"
+      emailext (
+        subject: "$PROJECT_NAME DevSecOps CodeQL Scan Failed",
+        mimeType: "text/html",
+        body: "Please check the console for more details: ${env.BUILD_URL}console",
+        to: EMAIL_ID
+      )
+    }
+  }
+}
