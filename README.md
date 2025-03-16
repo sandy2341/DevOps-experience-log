@@ -19,17 +19,17 @@ This repository serves as a comprehensive log of my hands-on DevOps experience, 
 ## Repository Structure  
 ```
 📂 devops-experience-log  
-├── 📁 projects               # Hands-on projects and implementations  
+├── 📁 projects               
 │   ├── project-1            #  GitHub Migrations
 │   ├── project-2            # Production Deploymentes Teamcity Octopus Deploy Mulesoft anypoint studio
     |---project-3             # Security Analyst
-    |---project 4       
+    |---project 4             # App deployments on Azure app service , AWS elastic stalkbeans     
           
 ├── 📁 scripts                # Project setup by AWS
 ├── 📁 troubleshooting         # Security Analyst
 ├── 📁 notes                  # Important learnings, commands, and tips  
 ├── 📄 README.md              # This file  
-└── 📄 LICENSE                # (Optional) Open-source license  
+└── 📄 LICENSE               
 ```  
 
 ## Featured Projects  
