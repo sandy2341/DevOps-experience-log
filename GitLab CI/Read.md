@@ -1,3 +1,32 @@
+**Create GitLab Runner**
+What is GitLab Runner
+How to install GitLab runner
+How to register GitLab runner
+How to start GitLab runner
+
+used in GitLab CI
+Open source continuous integration service included with GitLab
+used to run jobs & send results back to GitLab
+
+Step 1: Install GitLab Runner
+   https://docs.gitlab.com/runner/
+   https://docs.gitlab.com/runner/instal...
+
+gitlab-runner.exe install
+gitlab-runner --version
+   
+Step 2: Register GitLab Runner
+  (process to bind runner with gitlab instance)
+https://docs.gitlab.com/runner/regist...
+gitlab-runner.exe register
+
+Step 3: Start GitLab Runner
+gitlab-runner.exe start
+
+Step 4: Check runner is started in the project
+
+
+**Create GitLab CI** 
 1. What is GitLab CI/CD
 2. Create .gitlab-ci.yml
 3. Run CI/CD pipeline
