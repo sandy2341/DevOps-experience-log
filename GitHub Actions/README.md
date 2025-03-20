@@ -27,6 +27,15 @@ jobs:
         steps:
         - uses: actions/checkout@v2
 
+**Syntax_Jobs:** 
+- name: Build and Push Docker Image
+      uses: mr-smithers-excellent/docker-build-push@v4
+      with:
+        image: nanajanashia/demo-app
+        registry: docker.io
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
 
 ****Links for the GitHub Actions which I used in this project
 List of GitHub Actions:
