@@ -9,4 +9,39 @@
 ##### push image to repo 
 
     docker tag java-app demo-app:java-1.0
+
+**Syntax_Events:** 
+Name of GitHub event that triggers the workflow
+name  (optional)
+on (required)
+on:    
+    push:
+        branches: [master]  // Everytime someone pushes to master
+    pull_request:        
+        branches: [master]  // Everytime when pull request gets created with master as a target
+**Syntax_Jobs:** 
+Set of actions the will be executed, Events trigger a chain of action and these are defined in Jobs block.
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+
+
+****Links for the GitHub Actions which I used in this project
+List of GitHub Actions:
+
+https://github.com/actions
+https://github.com/marketplace?type=actions
+
+Events:
+
+https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows
+
+Docker action we use in this project
+
+https://github.com/marketplace/actions/docker-build-push****
+
+
+
     
