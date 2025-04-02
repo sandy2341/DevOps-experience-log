@@ -1,8 +1,3 @@
-# Azure Zero to Hero Course
-
-
-## If you like the content, Don't forget to give this repository a :star:
-
 ## 1: Understanding Cloud Concepts, Vocabulary and Terminology
 - What is cloud ?
 - What is the difference between public, private and hybrid cloud ?
@@ -151,10 +146,3 @@
 - State file management of Terraform in Azure
 - Best Practices
 
-##  24: Azure DevOps Resume preparation for Freshers and Experienced
-- How to create an impressive resume on Azure DevOps
-- How to add projects to the Resume
-
-##  25: Azure Interview Preparion
-- Review of Key Concepts
-- Interviews Questions and Practice Sessions
