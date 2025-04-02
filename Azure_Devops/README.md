@@ -1,5 +1,3 @@
-Title: Setting Up, Building, Deploying, and Maintaining a Java Application on Azure DevOps
-
 Slide 1: Introduction
 Title: Setting Up, Building, Deploying, and Maintaining a Java Application on Azure DevOps
 
@@ -25,10 +23,9 @@ Title: Step 2: Set Up Your Repository
 Content:
 
 Create a GitHub Repository:
-
 If your code isn't already in a GitHub repository, create one and push your Java code to it. !GitHub Repository
-Connect Azure DevOps to GitHub:
 
+Connect Azure DevOps to GitHub:
 In your Azure DevOps project, go to Repos and select Import a repository.
 Import your GitHub repository. !Import Repository
 Slide 4: Create a Build Pipeline
