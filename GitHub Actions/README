@@ -1,3 +1,6 @@
+GitHub actions and GitLab are platform orianted solutions
+
+
 ##### build the project
 
     ./gradlew build
